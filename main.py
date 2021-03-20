@@ -5,23 +5,16 @@ from collections import defaultdict
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 import argparse
 
-env = Environment(
-    loader=FileSystemLoader('.'),
-    autoescape=select_autoescape(['html', 'xml'])
-)
 
-template = env.get_template('template.html')
+started_year = 1920
+total_years_number = datetime.today().year-started_year
 
-year_started = 1920
-years = datetime.today().year-year_started
-last_year_num = int(list(str(years))[-1])
-
-if last_year_num == 1:
-    a = "год"
-elif last_year_num >= 2 and last_year_num < 5:
-    a = "года"
-elif last_year_num >= 5 and last_year_num < 10 or last_year_num == 0:
-    a = "лет"
+if total_years_number % 10 == 1 and total_years_number % 100 != 11:
+    years = "год"
+elif 2 <= total_years_number % 10 <= 4 and not 12 <= total_years_number % 100 <= 14:
+    years = "года"
+else:
+    years = "лет"
 
 parser = argparse.ArgumentParser(
     description='Чтобы запустить сайт (index.html) вам потребуется указать название Exel файла с данными для вин'
@@ -35,13 +28,19 @@ except:
     print("Файла, который вы указали, не существует. Использован wines.xlsx")
     wines = pandas.read_excel("wines.xlsx", sheet_name='Лист1', na_values='nan', keep_default_na=False).to_dict(orient='records')
 
-
 wine_assortment = defaultdict(list)
 for bottle in wines:
     wine_assortment[bottle['Категория']].append(bottle)
 
+env = Environment(
+    loader=FileSystemLoader('.'),
+    autoescape=select_autoescape(['html', 'xml'])
+)
+
+template = env.get_template('template.html')
+
 rendered_page = template.render(
-    a = a,
+    total_years = total_years_number,
     years=years,
     wine_assortment=wine_assortment
 )
