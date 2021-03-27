@@ -19,14 +19,10 @@ else:
 parser = argparse.ArgumentParser(
     description='Чтобы запустить сайт (index.html) вам потребуется указать название Exel файла с данными для вин'
 )
-parser.add_argument('file', help='Название файла')
+parser.add_argument('file', default='wines.xlsx', nargs='?', help='Название файла')
 args = parser.parse_args().file
 
-try:
-    wines = pandas.read_excel(args, sheet_name='Лист1', na_values='nan', keep_default_na=False).to_dict(orient='records')
-except:
-    print("Файла, который вы указали, не существует. Использован wines.xlsx")
-    wines = pandas.read_excel("wines.xlsx", sheet_name='Лист1', na_values='nan', keep_default_na=False).to_dict(orient='records')
+wines = pandas.read_excel(args, sheet_name='Лист1', na_values='nan', keep_default_na=False).to_dict(orient='records')
 
 wine_assortment = defaultdict(list)
 for bottle in wines:
