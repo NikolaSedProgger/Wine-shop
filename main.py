@@ -1,48 +1,50 @@
-from datetime import datetime
-from http.server import HTTPServer, SimpleHTTPRequestHandler
 import pandas
-from collections import defaultdict
-from jinja2 import Environment, FileSystemLoader, select_autoescape
 import argparse
 
+from datetime import datetime
+from http.server import HTTPServer, SimpleHTTPRequestHandler
 
-started_year = 1920
-total_years_number = datetime.today().year-started_year
+from jinja2 import Environment, FileSystemLoader, select_autoescape
+from collections import defaultdict
 
-if total_years_number % 10 == 1 and total_years_number % 100 != 11:
-    years = "год"
-elif 2 <= total_years_number % 10 <= 4 and not 12 <= total_years_number % 100 <= 14:
-    years = "года"
-else:
-    years = "лет"
+if __name__ == '__main__':    
+    started_year = 1920
+    total_years_number = datetime.today().year-started_year
 
-parser = argparse.ArgumentParser(
-    description='Чтобы запустить сайт (index.html) вам потребуется указать название Exel файла с данными для вин'
-)
-parser.add_argument('file', default='wines.xlsx', nargs='?', help='Название файла')
-args = parser.parse_args().file
+    if total_years_number % 10 == 1 and total_years_number % 100 != 11:
+        years = "год"
+    elif 2 <= total_years_number % 10 <= 4 and not 12 <= total_years_number % 100 <= 14:
+        years = "года"
+    else:
+        years = "лет"
 
-wines = pandas.read_excel(args, sheet_name='Лист1', na_values='nan', keep_default_na=False).to_dict(orient='records')
+    parser = argparse.ArgumentParser(
+        description='Чтобы запустить сайт (index.html) вам потребуется указать название Exel файла с данными для вин'
+    )
+    parser.add_argument('file', default='wines.xlsx', nargs='?', help='Название файла')
+    args = parser.parse_args().file
 
-wine_assortment = defaultdict(list)
-for bottle in wines:
-    wine_assortment[bottle['Категория']].append(bottle)
+    wines = pandas.read_excel(args, sheet_name='Лист1', na_values='nan', keep_default_na=False).to_dict(orient='records')
 
-env = Environment(
-    loader=FileSystemLoader('.'),
-    autoescape=select_autoescape(['html', 'xml'])
-)
+    wine_assortment = defaultdict(list)
+    for bottle in wines:
+        wine_assortment[bottle['Категория']].append(bottle)
 
-template = env.get_template('template.html')
+    env = Environment(
+        loader=FileSystemLoader('.'),
+        autoescape=select_autoescape(['html', 'xml'])
+    )
 
-rendered_page = template.render(
-    total_years = total_years_number,
-    years=years,
-    wine_assortment=wine_assortment
-)
+    template = env.get_template('template.html')
 
-with open('index.html', 'w', encoding="utf8") as file:
-    file.write(rendered_page)
+    rendered_page = template.render(
+        total_years = total_years_number,
+        years = years,
+        wine_assortment = wine_assortment
+    )
 
-server = HTTPServer(('0.0.0.0', 8000), SimpleHTTPRequestHandler)
-server.serve_forever()
+    with open('index.html', 'w', encoding="utf8") as file:
+        file.write(rendered_page)
+
+    server = HTTPServer(('0.0.0.0', 8000), SimpleHTTPRequestHandler)
+    server.serve_forever()
